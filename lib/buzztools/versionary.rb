@@ -73,7 +73,6 @@ module Versionary
 	   		updates[:iid] = id if !iid
 		    if !version
 	   		  updates[:version] = self.class.next_version_id(self.iid)
-		      updates[:ver_latest] = true
 		    end
 	   		update_attributes!(updates) unless updates.empty?
 	   		true
@@ -116,10 +115,6 @@ module Versionary
 
 	    scope :live_current_version, ->(aIid,aDate) {
 		    where(iid: aIid).where("current_from <= '#{aDate}'").order('version DESC').limit(1)
-	    }
-
-	    scope :latest_version, -> {
-		    where(ver_latest: true)
 	    }
 
 	    scope :current_versions, ->(aDate) {
