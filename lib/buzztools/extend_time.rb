@@ -81,4 +81,14 @@ Time.class_eval do
 	def to_w3c
 		utc.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 	end
+
+	# returns an integer date stamp (milliseconds since 1970) compatible with Javascript
+	def to_ms
+		(to_f*1000).round
+	end
+
+	# creates a Time object from an integer date stamp (milliseconds since 1970) compatible with Javascript
+	def self.from_ms(aMilliseconds)
+		at(aMilliseconds/1000.0)
+	end
 end

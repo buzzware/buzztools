@@ -107,14 +107,18 @@ module Versionary
 	 		#}
 
 
-			scope :live_current_versions, ->(aDate) {
-				inner = clone.select("iid, current_from, max(version) as version").where("current_from <= '#{aDate}'").group(:iid).to_sql
+			scope :live_current_versions, ->(aTimestamp) {
+				inner = clone.select("iid, current_from, max(version) as version").where("current_from <= '#{aTimestamp}'").group(:iid).to_sql
 				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
-				where "id IN (#{ids})"
+				if ids.to_nil
+					where "id IN (#{ids})"
+				else
+					where("1=0")              # relation that matches nothing
+				end
 			}
 
-	    scope :live_current_version, ->(aIid,aDate) {
-		    where(iid: aIid).where("current_from <= '#{aDate}'").order('version DESC').limit(1)
+	    scope :live_current_version, ->(aIid,aTimestamp) {
+		    where(iid: aIid).where("current_from <= '#{aTimestamp}'").order('version DESC').limit(1)
 	    }
 
 	    scope :current_versions, ->(aDate) {
