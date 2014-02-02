@@ -4,8 +4,11 @@
 # * no shadow tables
 # * does not abuse ActiveRecord, no magic
 # * no serialization at all, so queries work with all versions
-# * associations work like normal ActiveRecord
+# * associations work like normal ActiveRecord. The id column identifies a single version of an instance. You can associate to an old version
 # * its easy to read and write old versions
+# * if you use and keep updated the ver_current column, it is extremely fast
+# * this file is really all there is to it
+# * supports future versions that become current when the time comes eg. future price changes
 #
 # This is achieved by using the id column to identify each version of each instance, unlike some solutions that use the id per instance, then have to do trickery to provide versions.
 # This means associations can simply attach to any version of any instance using the id column as normal
@@ -24,16 +27,18 @@
 # eggs = Product.create!(name: 'eggs', price: 2.99)
 # eggs2 = eggs.create_version!(price: 3.10)
 #
-# latest_eggs = Product.where(name: 'eggs').latest_versions.first
+# current_10_dollar_products = Product.live_current_versions.where(price: 10)
 #
 # Migration
 #
 #class CreateThings < ActiveRecord::Migration
 #  def change
 #    create_table :things do |t|
-#      t.integer :iid
+#      t.integer :iid         # instance id - versions of an instance will have different ids but the same iid
 #      t.integer :version
-#      t.date :current_from
+#      t.integer :current_from, limit: 8    # timestamp in milliseconds since 1970
+#			 t.boolean :ver_current, null: false, default: false    # optional, for performance. true indicates this is the current version
+#
 #      t.integer :size
 #      t.string :colour
 #      t.string :shape
@@ -60,14 +65,6 @@ module Versionary
 	   		where(iid: aIid).maximum(:version).to_i + 1
 	   	end
 
-	    # as an optimisation :
-	    # * add ver_is_max column and max_version_instance_id(iid) method
-	    # * set ver_is_max on after_create
-	    # * can then read max_versions very quickly (where ver_is_max = TRUE)
-	    #
-	    # * add ver_current columns and set on create if id == current_version_instance_id(iid)
-	    # * every so often, must run update_current_version_column method
-	    # * can then read current_versions very quickly (eg. where ver_current = TRUE)
 	    after_create do
 	   		updates = {}
 	   		updates[:iid] = id if !iid
@@ -85,27 +82,6 @@ module Versionary
 				#ids = ActiveRecord::Base.connection.execute("select id from (SELECT iid, max(version) as version FROM `things` GROUP BY iid) as v inner join things as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
 				where "id IN (#{ids})"
 			}
-
-	    # update_current_version_column would :
-	    # clear all flags
-	    # use live_current_versions and latest_versions to get rows
-	    # set flags on selected rows
-	    #Thing.update_all(:ver_latest,false)
-	    #Thing.live_latest_versions.update_all(:ver_latest,true)
-
-	    # select unique iid's
-	    # for each iid, v = Model.live_current_version(iid,aDate)
-
-	    ## Thing.select("...").where(owner: ,dealership: ).latest_versions.where(state: 'WA')
-	    #scope :latest_versions, -> {
-		   # inner = clone.select("iid, max(version) as version").group(:iid).to_sql
-       # from("#{inner} as v").join("inner join #{table_name} as t on t.iid = v.iid and t.version = v.version")
-       # #
-       # #ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
-       # ##ids = ActiveRecord::Base.connection.execute("select id from (SELECT iid, max(version) as version FROM `things` GROUP BY iid) as v inner join things as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
-       # #where "id IN (#{ids})"
-	 		#}
-
 
 	    # Scopes to the current version for all iids at the given timestamp
 	    # This and other methods beginning with "live" do not use the ver_current column
@@ -139,22 +115,6 @@ module Versionary
 	    end
     end
   end
-
-	#self.alias_method_chain :create!, :versioning
-	#def self.create!(*args)
-	#	begin
-	#		super
-	#	rescue ActiveRecord::RecordNotUnique => e
-	#		raise unless e.original_exception.message =~ /index_[a-zA-Z0-9_]+_on_iid_and_version'$/
-	#		fields = args.first
-	#		key = fields.has_key?('iid') ? 'iid' : :iid
-	#		iid = fields[key]
-	#		new_version = where(iid: iid).maximum(:version).to_i + 1
-	#		key = fields.has_key?('version') ? 'version' : :version
-	#		fields[key] = new_version
-	#		super(*args)
-	#	end
-	#end
 
 	def copyable_attributes
 		result = {}
