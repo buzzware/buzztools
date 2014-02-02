@@ -107,6 +107,8 @@ module Versionary
 	 		#}
 
 
+	    # Scopes to the current version for all iids at the given timestamp
+	    # This and other methods beginning with "live" do not use the ver_current column
 			scope :live_current_versions, ->(aTimestamp) {
 				inner = clone.select("iid, current_from, max(version) as version").where("current_from <= '#{aTimestamp}'").group(:iid).to_sql
 				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
@@ -117,13 +119,24 @@ module Versionary
 				end
 			}
 
+	    # Scopes to the current version of a given iid. Can only return 0 or 1 records
+	    # This and other methods beginning with "live" do not use the ver_current column
 	    scope :live_current_version, ->(aIid,aTimestamp) {
 		    where(iid: aIid).where("current_from <= '#{aTimestamp}'").order('version DESC').limit(1)
 	    }
 
-	    scope :current_versions, ->(aDate) {
+	    # Scopes to current version for all iids using the ver_current column. The ver_current must be updated regularly using update_all_ver_current.
+	    # This method is much faster than live_current_versions
+	    scope :current_versions, -> {
 		    where(ver_current: true)
 	    }
+
+	    # Updates the ver_current column, which enables simpler and much faster queries on current versions eg. using current_versions instead of live_current_versions.
+	    # Must be run periodically eg. 4am daily
+	    def self.update_all_ver_current
+		    self.update_all(ver_current: false)
+		    self.live_current_versions(Time.now.to_ms).update_all(ver_current: true)
+	    end
     end
   end
 
@@ -168,4 +181,7 @@ module Versionary
 		self.class.create!(attrs)
 	end
 
+	def current_version
+		self.class.live_current_version(self.iid,KojacUtils.timestamp).first
+	end
 end

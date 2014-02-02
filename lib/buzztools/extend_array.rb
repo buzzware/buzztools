@@ -1,3 +1,5 @@
+require 'csv'
+
 module ExtendArray
 
 	module_function # this makes the methods accessible on the module as well as instances when the module is included into a class
@@ -40,6 +42,27 @@ module ExtendArray
 
 	def to_nil
 		self.empty? ? nil : self
+	end
+
+	def to_csv
+		def as_hash(aItem)
+			aItem = aItem.attributes if aItem.respond_to?(:attributes)
+			return aItem if aItem.is_a?(Hash)
+			nil
+		end
+		item1 = as_hash(first)
+		raise "Must be an array of hashes" unless item1 && item1.is_a?(Hash)
+		fields = item1.keys.map(&:to_s).sort
+		if fields.delete('id')
+			fields.unshift('id')
+		end
+    CSV.generate do |csv|
+      csv << fields
+      self.each do |i|
+	      next unless i = as_hash(i)
+        csv << i.values_at(*column_names)
+      end
+    end
 	end
 end
 
