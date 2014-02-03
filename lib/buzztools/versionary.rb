@@ -97,7 +97,8 @@ module Versionary
 
 	    # Scopes to the current version of a given iid. Can only return 0 or 1 records
 	    # This and other methods beginning with "live" do not use the ver_current column
-	    scope :live_current_version, ->(aIid,aTimestamp) {
+	    scope :live_current_version, ->(aIid,aTimestamp=nil) {
+		    aTimestamp ||= KojacUtils.timestamp
 		    where(iid: aIid).where("current_from <= '#{aTimestamp}'").order('version DESC').limit(1)
 	    }
 
