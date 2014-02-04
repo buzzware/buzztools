@@ -13,7 +13,7 @@ end
 Float.class_eval do
 
 	def to_nil
-		(self==0 || self.nan?) ? nil : self
+		(self==0 || !self.finite?) ? nil : self
 	end
 
 end
