@@ -24,21 +24,24 @@ module ExtendObject
 			path = args
 		end
 		if path.is_a?(String)
-			segments = path.split('.').map!(&:to_sym)
+			segments = path.split('.')
 			segment = segments.shift
 		elsif path.is_a?(Symbol)
-			segments = []
-			segment = path
+			path = path.to_s
+			segments = [path]
+			segment = segments.shift
 		elsif path.is_a?(Array)
 			segments = path
 			segment = segments.shift
-			segment = segment.to_sym if segment
+			#segment = segment.to_sym if segment
 		end
 		return self unless segment.to_nil
-		value = if self.respond_to?(segment)
+		value = if self.is_a?(Array)
+			self[segment.to_i] rescue nil
+		elsif (self.respond_to?(segment.to_sym) rescue nil)
 			self.send(segment)
 		elsif self.respond_to?(:[])
-			(self[segment] || self[segment.to_s]) rescue nil
+			(begin self[segment] rescue nil end) || (begin self[segment.to_sym] rescue nil end)
 		end
 		if segments.empty?
 			value
