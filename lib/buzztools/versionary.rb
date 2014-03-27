@@ -78,7 +78,15 @@ module Versionary
 			# should be able to do eg. : TaxRate.where(owner_id: 1,dealership_id: 2).latest_versions.where(state: 'WA')
 			scope :live_latest_versions, -> {
 				inner = clone.select("iid, max(version) as version").group(:iid).to_sql
-				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
+				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a
+				if (adapter = ActiveRecord::Base.configurations[Rails.env]['adapter'])=='postgresql'
+					ids = ids.map{|i| i['id']}.join(',')
+				elsif adapter.begins_with? 'mysql'
+					ids = ids.flatten.join(',')
+				else
+					raise "Adapter #{adapter} not supported"
+				end
+
 				#ids = ActiveRecord::Base.connection.execute("select id from (SELECT iid, max(version) as version FROM `things` GROUP BY iid) as v inner join things as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
 				where "id IN (#{ids})"
 			}
@@ -86,8 +94,15 @@ module Versionary
 	    # Scopes to the current version for all iids at the given timestamp
 	    # This and other methods beginning with "live" do not use the ver_current column
 			scope :live_current_versions, ->(aTimestamp) {
-				inner = clone.select("iid, current_from, max(version) as version").where("current_from <= '#{aTimestamp}'").group(:iid).to_sql
-				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
+				inner = clone.select("iid, max(version) as version").where(["current_from <= ?",aTimestamp]).group(:iid).to_sql
+				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a
+				if (adapter = ActiveRecord::Base.configurations[Rails.env]['adapter'])=='postgresql'
+					ids = ids.map{|i| i['id']}.join(',')
+				elsif adapter.begins_with? 'mysql'
+					ids = ids.flatten.join(',')
+				else
+					raise "Adapter #{adapter} not supported"
+				end
 				if ids.to_nil
 					where "id IN (#{ids})"
 				else
@@ -99,7 +114,7 @@ module Versionary
 	    # This and other methods beginning with "live" do not use the ver_current column
 	    scope :live_current_version, ->(aIid,aTimestamp=nil) {
 		    aTimestamp ||= KojacUtils.timestamp
-		    where(iid: aIid).where("current_from <= '#{aTimestamp}'").order('version DESC').limit(1)
+		    where(iid: aIid).where(["current_from <= ?",aTimestamp]).order('version DESC').limit(1)
 	    }
 
 	    # Scopes to current version for all iids using the ver_current column. The ver_current must be updated regularly using update_all_ver_current.
