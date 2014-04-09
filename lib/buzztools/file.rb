@@ -3,14 +3,12 @@ module Buzztools
 
 		module_function
 
-		public
-
 		def sniff_seperator(aPath)
 			result = 0.upto(aPath.length-1) do |i|
 				char = aPath[i,1]
 				break char if char=='\\' || char=='/'
 			end
-			result = File::SEPARATOR if result==0
+			result = ::File::SEPARATOR if result==0
 			return result
 		end
 
@@ -51,12 +49,12 @@ module Buzztools
 		def path_combine(aBasePath,aPath)
 			return aBasePath if !aPath
 			return aPath if !aBasePath
-			return path_relative?(aPath) ? File.join(aBasePath,aPath) : aPath
+			return path_relative?(aPath) ? ::File.join(aBasePath,aPath) : aPath
 		end
 
 		# make path real according to file system
 		def real_path(aPath)
-			(path = Pathname.new(File.expand_path(aPath))) && path.realpath.to_s
+			(path = Pathname.new(::File.expand_path(aPath))) && path.realpath.to_s
 		end
 
 		# takes a path and combines it with a root path (which defaults to Dir.pwd) unless it is absolute
@@ -68,8 +66,8 @@ module Buzztools
 		end
 
 		def find_upwards(aStartPath,aPath)
-			curr_path = File.expand_path(aStartPath)
-			while curr_path && !(test_path_exists = File.exists?(test_path = File.join(curr_path,aPath))) do
+			curr_path = ::File.expand_path(aStartPath)
+			while curr_path && !(test_path_exists = ::File.exists?(test_path = ::File.join(curr_path,aPath))) do
 				curr_path = path_parent(curr_path)
 			end
 			curr_path && test_path_exists ? test_path : nil
@@ -88,15 +86,15 @@ module Buzztools
 
 		def path_parent(aPath)
 			return nil if is_root_path?(aPath)
-			append_slash(File.dirname(remove_slash(expand_path(aPath))))
+			append_slash(::File.dirname(remove_slash(expand_path(aPath))))
 		end
 
 		def simple_dir_name(aPath)
-			File.basename(remove_slash(aPath))
+			::File.basename(remove_slash(aPath))
 		end
 
 		def simple_file_name(aPath)
-			f = File.basename(aPath)
+			f = ::File.basename(aPath)
 			dot = f.index('.')
 			return dot ? f[0,dot] : f
 		end
@@ -105,5 +103,21 @@ module Buzztools
 			sep = sniff_seperator(aPath)
 			aPath.split(sep)
 		end
+
+		def extension(aFile,aExtended=true)
+			f = ::File.basename(aFile)
+			dot = aExtended ? f.index('.') : f.rindex('.')
+			return dot ? f[dot+1..-1] : f
+		end
+
+		def no_extension(aFile,aExtended=true)
+			ext = extension(aFile,aExtended)
+			return aFile.chomp('.'+ext)
+		end
+
+		def change_ext(aFile,aExt,aExtend=false)
+			no_extension(aFile,false)+(aExtend ? '.'+aExt+'.'+extension(aFile,false) : '.'+aExt)
+		end
+
 	end
 end
