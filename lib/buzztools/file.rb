@@ -1,3 +1,5 @@
+require 'pathname'
+
 module Buzztools
 	module File
 
