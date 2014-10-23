@@ -153,15 +153,6 @@ String.class_eval do
 		result
 	end
 
-	def to_nil(aPattern=nil)
-		return nil if self.empty?
-		if aPattern
-			return nil if (aPattern.is_a? Regexp) && (self =~ aPattern)
-			return nil if aPattern.to_s == self
-		end
-		self
-	end
-
 	def to_b(aDefault=false)
 		return true if ['1','yes','y','true','on'].include?(self.downcase)
 		return false if ['0','no','n','false','off'].include?(self.downcase)
@@ -233,8 +224,3 @@ String.class_eval do
 end
 
 
-Symbol.class_eval do
-	def to_nil
-		self
-	end
-end

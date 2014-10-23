@@ -69,10 +69,6 @@ module HashUtils
 		return result
 	end
 
-	def to_nil
-		self.empty? ? nil : self
-	end
-
 end
 
 Hash.class_eval do

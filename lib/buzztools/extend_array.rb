@@ -40,10 +40,6 @@ module ExtendArray
 		filter_exclude!(aValues,aArray.clone)
 	end
 
-	def to_nil
-		self.empty? ? nil : self
-	end
-
 	def to_csv
 		def as_hash(aItem)
 			aItem = aItem.attributes if aItem.respond_to?(:attributes)

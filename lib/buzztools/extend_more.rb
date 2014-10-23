@@ -1,9 +1,5 @@
 NilClass.class_eval do
 
-	def to_nil
-		nil
-	end
-
 	def to_b(aDefault=false)
 		false
 	end
@@ -16,10 +12,6 @@ end
 
 TrueClass.class_eval do
 
-	def to_nil
-		self
-	end
-
 	def to_b(aDefault=false)
 		self
 	end
@@ -27,10 +19,6 @@ TrueClass.class_eval do
 end
 
 FalseClass.class_eval do
-
-	def to_nil
-		nil
-	end
 
 	def to_b(aDefault=false)
 		self

@@ -1,3 +1,4 @@
+# from https://github.com/buzzware/buzztools/blob/master/lib/buzztools/versionary.rb
 # Versionary is a mixin for implementing versioning of models with ActiveRecord in Rails 3.2+
 # It attempts to be better than other solutions eg.
 #
