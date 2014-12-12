@@ -48,6 +48,12 @@ module Buzztools
 			append_slash(aNewBase)+rel_path
 		end
 
+		def path_relative?(aPath)
+			return false if aPath[0,1]=='/'
+			return false if aPath =~ /^[a-zA-Z]:/
+			return true
+		end
+
 		def path_combine(aBasePath,aPath)
 			return aBasePath if !aPath
 			return aPath if !aBasePath
@@ -82,8 +88,9 @@ module Buzztools
 			path = aPath
 			if path.begins_with?('...')
 				rel_part = path.split3(/\.\.\.[\/\\]/)[2]
-				path = find_upwards(aBasePath,rel_part)
+				return find_upwards(aBasePath,rel_part)
 			end
+			path_combine(aBasePath,aPath)
 		end
 
 		def path_parent(aPath)
