@@ -69,6 +69,10 @@ module HashUtils
 		return result
 	end
 
+	def compact
+		self.reject {|k,v| v==nil}
+	end
+
 end
 
 Hash.class_eval do
