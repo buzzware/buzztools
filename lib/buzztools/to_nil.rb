@@ -62,3 +62,9 @@ String.class_eval do
 		self
 	end
 end
+
+Time.class_eval do
+	def to_nil
+		self
+	end
+end

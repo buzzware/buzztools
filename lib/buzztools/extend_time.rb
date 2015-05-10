@@ -91,4 +91,30 @@ Time.class_eval do
 	def self.from_ms(aMilliseconds)
 		at(aMilliseconds/1000.0)
 	end
+
+	def iso8601ms
+		iso8601(3)
+	end
+
+	def zoneless
+		(self + self.utc_offset).utc
+	end
+
+	# sets the zone without affecting the hour or day
+	def to_zone(aHours)
+		self.in_time_zone(aHours)+self.utc_offset-aHours.to_i.hours
+	end
+end
+
+if defined? ActiveSupport::TimeWithZone
+	ActiveSupport::TimeWithZone.class_eval do
+		def zoneless
+			(self + self.utc_offset).utc
+		end
+
+		# sets the zone without affecting the hour or day
+		def to_zone(aHours)
+			self.in_time_zone(aHours)+self.utc_offset-aHours.to_i.hours
+		end
+	end
 end

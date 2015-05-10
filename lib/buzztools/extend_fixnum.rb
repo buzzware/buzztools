@@ -8,4 +8,7 @@ Fixnum.class_eval do
 		(!aMin || (self >= aMin)) && (!aMax || (self <= aMax)) ? self : aDefault
 	end
 
+	def to_ms # eg. for 1.minute.to_ms
+		self*1000
+	end
 end
