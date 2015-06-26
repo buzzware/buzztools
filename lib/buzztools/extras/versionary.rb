@@ -78,24 +78,17 @@ module Versionary
 
 			# should be able to do eg. : TaxRate.where(owner_id: 1,dealership_id: 2).latest_versions.where(state: 'WA')
 			scope :live_latest_versions, -> {
-				inner = clone.select("iid, max(version) as version").group(:iid).to_sql
-				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a
-				if (adapter = ActiveRecord::Base.configurations[Rails.env]['adapter'])=='postgresql'
-					ids = ids.map{|i| i['id']}.join(',')
-				elsif adapter.begins_with? 'mysql'
-					ids = ids.flatten.join(',')
-				else
-					raise "Adapter #{adapter} not supported"
-				end
-
-				#ids = ActiveRecord::Base.connection.execute("select id from (SELECT iid, max(version) as version FROM `things` GROUP BY iid) as v inner join things as t on t.iid = v.iid and t.version = v.version").to_a.flatten.join(',')
-				where "id IN (#{ids})"
+				live_current_versions(nil)
 			}
 
 	    # Scopes to the current version for all iids at the given timestamp
 	    # This and other methods beginning with "live" do not use the ver_current column
+	    # if the timestamp is nil, it will return the highest available version regardless of current_from
 			scope :live_current_versions, ->(aTimestamp) {
-				inner = clone.select("iid, max(version) as version").where(["current_from <= ?",aTimestamp]).group(:iid).to_sql
+				aTimestamp = aTimestamp.to_ms if aTimestamp && aTimestamp.is_a?(Time)
+				inner = clone.select("iid, max(version) as version")
+				inner = inner.where(["current_from <= ?",aTimestamp]) if aTimestamp
+				inner = inner.group(:iid).to_sql
 				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a
 				if (adapter = ActiveRecord::Base.configurations[Rails.env]['adapter'])=='postgresql'
 					ids = ids.map{|i| i['id']}.join(',')
@@ -126,6 +119,7 @@ module Versionary
 
 	    # Updates the ver_current column, which enables simpler and much faster queries on current versions eg. using current_versions instead of live_current_versions.
 	    # Must be run periodically eg. 4am daily
+	    # !!! probably should do something like this after every create_version!
 	    def self.update_all_ver_current
 		    self.update_all(ver_current: false)
 		    self.live_current_versions(Time.now.to_ms).update_all(ver_current: true)
@@ -160,5 +154,9 @@ module Versionary
 
 	def current_version
 		self.class.live_current_version(self.iid,KojacUtils.timestamp).first
+	end
+
+	def versions
+		self.class.where(iid: iid).order(:version)
 	end
 end
