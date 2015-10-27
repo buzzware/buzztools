@@ -93,9 +93,17 @@ module Buzztools
 			path_combine(aBasePath,aPath)
 		end
 
+		def is_root_path?(aPath)
+			# if is_windows?
+			# 	(aPath =~ /^[a-zA-Z]\:[\\\/]$/)==0
+			# else
+				aPath == '/'
+			# end
+		end
+
 		def path_parent(aPath)
 			return nil if is_root_path?(aPath)
-			append_slash(::File.dirname(remove_slash(expand_path(aPath))))
+			append_slash(::File.dirname(remove_slash(::File.expand_path(aPath))))
 		end
 
 		def simple_dir_name(aPath)

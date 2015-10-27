@@ -1,17 +1,41 @@
 Time.class_eval do
 
-	if !respond_to?(:change)  # no activesupport loaded
+	if !method_defined?(:change)  # no activesupport loaded
 		def change(options)
-			::Time.send(
-				self.utc? ? :utc : :local,
-				options[:year]  || self.year,
-				options[:month] || self.month,
-				options[:day]   || self.day,
-				options[:hour]  || self.hour,
-				options[:min]   || (options[:hour] ? 0 : self.min),
-				options[:sec]   || ((options[:hour] || options[:min]) ? 0 : self.sec),
-				options[:usec]  || ((options[:hour] || options[:min] || options[:sec]) ? 0 : self.usec)
-			)
+			# ::Time.send(
+			# 	self.utc? ? :utc : :local,
+			# 	options[:year]  || self.year,
+			# 	options[:month] || self.month,
+			# 	options[:day]   || self.day,
+			# 	options[:hour]  || self.hour,
+			# 	options[:min]   || (options[:hour] ? 0 : self.min),
+			# 	options[:sec]   || ((options[:hour] || options[:min]) ? 0 : self.sec),
+			# 	options[:usec]  || ((options[:hour] || options[:min] || options[:sec]) ? 0 : self.usec)
+			# )
+
+			new_year  = options.fetch(:year, year)
+	    new_month = options.fetch(:month, month)
+	    new_day   = options.fetch(:day, day)
+	    new_hour  = options.fetch(:hour, hour)
+	    new_min   = options.fetch(:min, options[:hour] ? 0 : min)
+	    new_sec   = options.fetch(:sec, (options[:hour] || options[:min]) ? 0 : sec)
+
+	    if new_nsec = options[:nsec]
+	      raise ArgumentError, "Can't change both :nsec and :usec at the same time: #{options.inspect}" if options[:usec]
+	      new_usec = Rational(new_nsec, 1000)
+	    else
+	      new_usec  = options.fetch(:usec, (options[:hour] || options[:min] || options[:sec]) ? 0 : Rational(nsec, 1000))
+	    end
+
+	    if utc?
+	      ::Time.utc(new_year, new_month, new_day, new_hour, new_min, new_sec, new_usec)
+	    elsif zone
+	      ::Time.local(new_year, new_month, new_day, new_hour, new_min, new_sec, new_usec)
+	    else
+	      raise ArgumentError, 'argument out of range' if new_usec > 999999
+	      ::Time.new(new_year, new_month, new_day, new_hour, new_min, new_sec + (new_usec.to_r / 1000000), utc_offset)
+	    end
+
 		end
 
 		def seconds_since_midnight
