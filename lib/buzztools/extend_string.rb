@@ -86,7 +86,7 @@ String.class_eval do
 		deprefix!(aValue,self.clone)
 	end
 
-	def desuffix!(aString,aSuffix)
+	def desuffix!(aSuffix=$/,aString=self)
 		if aString[-aSuffix.length,aSuffix.length] == aSuffix
 			aString[-aSuffix.length,aSuffix.length] = ''
 			return aString
@@ -96,7 +96,7 @@ String.class_eval do
 	end
 
 	def desuffix(aValue=$/)
-		desuffix!(aValue,self.clone)
+		desuffix!(aValue,self.dup)
 	end
 
 	def begins_with?(aString)

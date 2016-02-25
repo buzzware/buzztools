@@ -112,6 +112,7 @@ Time.class_eval do
 	end
 
 	# creates a Time object from an integer date stamp (milliseconds since 1970) compatible with Javascript
+	# It will be in local timezone
 	def self.from_ms(aMilliseconds)
 		at(aMilliseconds/1000.0)
 	end
@@ -120,24 +121,39 @@ Time.class_eval do
 		iso8601(3)
 	end
 
+	# "zoneless time" is a way of representing a time and date eg. 1am 1/1/1970 regardless of timezone.
+	# This is done by converting it to the same time and date, but with the utc flag set
+	# This means that Time.new(1970,1,1).zoneless.to_i will return the same value on any machine
 	def zoneless
 		(self + self.utc_offset).utc
 	end
 
-	# sets the zone without affecting the hour or day
-	def to_zone(aHours)
+	# This sets the zone without affecting the hour or day
+	# Useful for building a time object eg. New Year in Sydney : Time.new(2016,1,1).to_zone(10)
+	def to_zone(aHours=nil)
+		aHours ||= utc_offset/3600.0
 		self.in_time_zone(aHours)+self.utc_offset-aHours.to_i.hours
+	end
+
+	# Useful for building a UTC/zoneless Time from ms since the epoch
+	# For Freewheeler :
+	# eg. Time.from_zoneless_ms(packet.timems).to_zone(packet.tzm/60)
+	def self.from_zoneless_ms(aTimems)
+		from_ms(aTimems).utc
 	end
 end
 
 if defined? ActiveSupport::TimeWithZone
 	ActiveSupport::TimeWithZone.class_eval do
+		# see above
 		def zoneless
 			(self + self.utc_offset).utc
 		end
 
+		# see above
 		# sets the zone without affecting the hour or day
-		def to_zone(aHours)
+		def to_zone(aHours=nil)
+			aHours ||= utc_offset/3600.0
 			self.in_time_zone(aHours)+self.utc_offset-aHours.to_i.hours
 		end
 	end
