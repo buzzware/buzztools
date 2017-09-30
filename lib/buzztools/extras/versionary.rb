@@ -88,6 +88,7 @@ module Versionary
 				aTimestamp = aTimestamp.to_ms if aTimestamp && aTimestamp.is_a?(Time)
 				inner = clone.select("iid, max(version) as version")
 				inner = inner.where(["current_from <= ?",aTimestamp]) if aTimestamp
+				inner = inner.order("current_from DESC,id DESC")
 				inner = inner.group(:iid).to_sql
 				ids = ActiveRecord::Base.connection.execute("select id from (#{inner}) as v inner join #{table_name} as t on t.iid = v.iid and t.version = v.version").to_a
 				if (adapter = ActiveRecord::Base.configurations[Rails.env]['adapter'])=='postgresql'
@@ -158,5 +159,9 @@ module Versionary
 
 	def versions
 		self.class.where(iid: iid).order(:version)
+	end
+
+	def current_from_time
+		current_from and Time.from_ms(current_from)
 	end
 end
