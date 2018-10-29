@@ -17,7 +17,7 @@ module HashUtils
 
 	def filter_include(aKeys,aHash=nil)
 		aHash ||= self
-		filter_include!(aKeys,aHash.clone)
+		filter_include!(aKeys,aHash.dup)
 	end
 
 	def filter_exclude!(aKeys,aHash=nil)
@@ -34,7 +34,7 @@ module HashUtils
 
 	def filter_exclude(aKeys,aHash=nil)
 		aHash ||= self
-		filter_exclude!(aKeys,aHash.clone)
+		filter_exclude!(aKeys,aHash.dup)
 	end
 
 	def has_values_for?(aKeys,aHash=nil)

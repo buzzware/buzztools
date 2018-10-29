@@ -49,7 +49,7 @@ String.class_eval do
 	end
 
 	def extract(aValue=$/)
-		extract!(aValue,self.clone)
+		extract!(aValue,self.dup)
 	end
 
 	# Like chomp! but operates on the leading characters instead.
@@ -70,7 +70,7 @@ String.class_eval do
 	end
 
 	def bite(aValue=$/)
-		bite!(aValue,self.clone)
+		bite!(aValue,self.dup)
 	end
 
 	def deprefix!(aPrefix=$/,aString=self)
@@ -83,7 +83,7 @@ String.class_eval do
 	end
 
 	def deprefix(aValue=$/)
-		deprefix!(aValue,self.clone)
+		deprefix!(aValue,self.dup)
 	end
 
 	def desuffix!(aSuffix=$/,aString=self)
@@ -113,7 +113,7 @@ String.class_eval do
 	end
 
 	def ensure_prefix(aValue=$/)
-		ensure_prefix!(aValue,self.clone)
+		ensure_prefix!(aValue,self.dup)
 	end
 
 	def ensure_suffix!(aSuffix=$/,aString=self)
@@ -122,7 +122,7 @@ String.class_eval do
 	end
 
 	def ensure_suffix(aValue=$/)
-		ensure_suffix!(aValue,self.clone)
+		ensure_suffix!(aValue,self.dup)
 	end
 
 	def to_integer(aDefault=nil)

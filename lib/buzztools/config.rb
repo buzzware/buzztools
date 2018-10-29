@@ -4,7 +4,7 @@ module Buzztools
 		attr_reader :default_values
 
 		def initialize(aDefaultValues,aNewValues=nil,&aBlock)
-			@default_values = aDefaultValues.clone
+			@default_values = aDefaultValues.dup
 			reset()
 			if aNewValues
 				block_given? ? read(aNewValues,&aBlock) : read(aNewValues)

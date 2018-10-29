@@ -20,7 +20,7 @@ module ExtendArray
 
 	def filter_include(aValues,aArray=nil)
 		aArray ||= self
-		filter_include!(aValues,aArray.clone)
+		filter_include!(aValues,aArray.dup)
 	end
 
 	def filter_exclude!(aValues,aArray=nil)
@@ -37,7 +37,7 @@ module ExtendArray
 
 	def filter_exclude(aValues,aArray=nil)
 		aArray ||= self
-		filter_exclude!(aValues,aArray.clone)
+		filter_exclude!(aValues,aArray.dup)
 	end
 
 	def to_csv
