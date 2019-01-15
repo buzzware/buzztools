@@ -137,7 +137,7 @@ String.class_eval do
 
 	def to_float(aDefault=nil)
 		t = self.strip
-		return aDefault if !t =~ /(\+|-)?([0-9]+\.?[0-9]*|\.[0-9]+)([eE](\+|-)?[0-9]+)?/
+		return aDefault if !(t =~ /(\+|-)?([0-9]+\.?[0-9]*|\.[0-9]+)([eE](\+|-)?[0-9]+)?/)
 		return t.to_f
 	end
 
